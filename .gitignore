@@ -1,0 +1,43 @@
+# binaries
+bin
+obj
+.objs
+lib
+build
+
+# rapidjson folder that is taken from other repo
+rapidjson/
+# boost is also not under git
+boost
+
+# premake
+Makefile
+*.make
+
+# Visual Studio
+*.opensdf
+*.sdf
+*.sln
+*.vcxproj*
+*.suo
+*.exe
+
+# CB project additional stuff
+*.depend
+*.layout
+*~
+*.cscope_file_list
+ValgrindOut.xml
+
+# There no need to save zips
+*.zip
+
+# Vim stuff
+.*.swp
+*.swo
+
+# Stuf of GTAGS
+GPATH
+GRTAGS
+GSYMS
+GTAGS
