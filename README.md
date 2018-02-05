@@ -37,4 +37,10 @@ _db\*_ is response, treatment and covariates for the dataset.
 *numTrials* is the number of divisions to train-hold\_out datasets
 *testProportion* is the 0-1 number specifying the proportion of the whole dataset to be considered as the hold-out set
 
+#### Avereage treatment effect function
+> subgroupQualityFunc(subgroup, Y, Trt)
+
+Function measure the quality of a subgroup
+_subgroup_  is a vector of logical flags specifying if i-th object is included into the subgroup
+_Y_, _Trt_ is the value of response and treatment varibale for every object
 
