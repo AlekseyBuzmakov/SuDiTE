@@ -3,7 +3,7 @@ Title: Comparison of uplift models
 Version: 0.0.0.9000
 Authors@R: person("Aleksey", "Buzmakov", email = "abuzmakov@gmail.com", role = c("aut", "cre"))
 Description: Wrap-Up for several uplift (treatment effect estimate) models and the infrasturture for evaluating them.
-Depends: R (>= 3.2.3)
+Depends: R (>= 3.2.3), data.table
 Imports:
 	data.table, uplift
 License: GPL-3

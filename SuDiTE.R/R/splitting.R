@@ -78,9 +78,16 @@ balansedSplit = function(opts, dbY, dbTrt, dbX) {
   balanceInds = (1:length(dbY))[-initInds]
   balanceInds=sample(balanceInds)
   for( i in balanceInds ) {
-    trainProb = balancedTrainProb(i, result, balanceVars)
-    if(opts$Deterministic) {
-      if(trainProb <= 0.5) {
+   trainProb = balancedTrainProb(i, result, balanceVars)
+    if(trainProb == 0.5) {
+      # Always random assignment
+      if(rbinom(1,1,opts$InitSplitProportion) == 1) {
+        result$Holdout=c(result$Holdout, i)
+      } else {
+        result$Train=c(result$Train, i)
+      }
+    } else if(opts$Deterministic) {
+      if(trainProb < 0.5) {
         result$Holdout=c(result$Holdout, i)
       } else {
         result$Train=c(result$Train, i)
@@ -131,6 +138,9 @@ balancedTrainProb = function(i, split, X) {
       next
     }
     p.val=t.test(tr,ho)$p.value
+    if(is.nan(p.val)){
+      p.val=1
+    }
     signifLevel = 0.05
     # If p.val is small, the rate is high, i.e., the correction is needed
     #  if p.val is insignificant then the covariate is balanced

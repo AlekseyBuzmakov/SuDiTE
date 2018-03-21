@@ -35,10 +35,10 @@ predictByModelRandomForest=function(m, X) {
 toNumericTable=function(X) {
   require(data.table)
   d=data.table(X)
-  for( c in colnames(d) ) {
-    if( is.factor(d[[c]]) ) {
-      d[, c(paste0(c,".",levels(d[[c]]))[-1], c) :=
-          c(lapply(levels(d[[c]])[-1], function(x) as.integer(x == d[[c]])), .(NULL))]
+  for( col in colnames(d) ) {
+    if( is.factor(d[[col]]) ) {
+      d[, c(paste0(col,".",levels(d[[col]]))[-1], col) :=
+          c(lapply(levels(d[[col]])[-1], function(x) as.integer(x == d[[col]])), .(NULL))]
     }
   }
   return(as.data.frame(d))

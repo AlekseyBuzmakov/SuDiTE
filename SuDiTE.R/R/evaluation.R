@@ -135,8 +135,8 @@ crossValidateAlgos = function(
       predictByModelFuncs,
       subgroupQualityFunc,
       trainY, trainTrt, trainX, testY, testTrt, testX )
-    result$TrainSize=c(result$TrainSize,length(ths$train))
-    result$TestSize=c(result$TestSize,length(ths$test))
+    result$TrainSize=c(result$TrainSize,length(ths$Train))
+    result$TestSize=c(result$TestSize,length(ths$Holdout))
     result$Subgroups = rbind(result$Subgroups, res$Subgroups)
     result$Sizes = rbind(result$Sizes, res$Sizes)
     result$Qualities = rbind(result$Qualities, res$Qualities)
