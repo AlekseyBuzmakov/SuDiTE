@@ -3,12 +3,23 @@
 #' @param Y is the binary response varibale
 #' @param Trt is the binary treatment variable
 #' @param X is the numeric covariates matrix
+#' @param opts is a list of options
 #'
 #' @return a model that is able to classify clients into treatment and control group
 #' @export
 #'
 #' @examples
-trainModelRandomForest=function(Y,Trt,X) {
+#'
+#' # Generating dataset
+#' Trt = rbinom(1000,1,0.5)
+#' X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
+#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+#' # Training
+#' m = trainModelRandomForest(Y,Trt,X)
+#' # Predicting a good group for new data
+#' sum(predictByModelRandomForest(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))))
+#'
+trainModelRandomForest=function(Y, Trt, X, opts) {
   require(uplift)
   return( upliftRF(X, Y, Trt,split_method = "Chisq") )
 }
@@ -22,6 +33,16 @@ trainModelRandomForest=function(Y,Trt,X) {
 #' @export
 #'
 #' @examples
+#'
+#' # Generating dataset
+#' Trt = rbinom(1000,1,0.5)
+#' X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
+#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+#' # Training
+#' m = trainModelRandomForest(Y,Trt,X)
+#' # Predicting a good group for new data
+#' sum(predictByModelRandomForest(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))))
+#'
 predictByModelRandomForest=function(m, X) {
   tbl=predict(m,X)
   return( (tbl[,1]-tbl[,2]) > 0)
@@ -60,13 +81,23 @@ modifyDataByTian=function(Trt,X) {
 #' @param Y is the binary response varibale
 #' @param Trt is the binary treatment variable
 #' @param X is the numeric covariates matrix
+#' @param opts is a list of options
 #'
 #' @return a model that is able to classify clients into treatment and control group
 #' @export
 #'
 #' @examples
 #'
-trainModelModLM=function(Y,Trt,X) {
+#' # Generating dataset
+#' Trt = rbinom(1000,1,0.5)
+#' X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
+#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+#' # Training
+#' m = trainModelModLM(Y,Trt,X)
+#' # Predicting a good group for new data
+#' sum(predictByModelModLM(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))))
+#'
+trainModelModLM=function(Y,Trt,X, opts) {
   stopifnot(sum(Y==1)+sum(Y==0) == length(Y))
   p=sum(Trt)/length(Trt)
   d=modifyDataByTian(2*Trt-1,X)
@@ -82,6 +113,16 @@ trainModelModLM=function(Y,Trt,X) {
 #' @export
 #'
 #' @examples
+#'
+#' # Generating dataset
+#' Trt = rbinom(1000,1,0.5)
+#' X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
+#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+#' # Training
+#' m = trainModelModLM(Y,Trt,X)
+#' # Predicting a good group for new data
+#' sum(predictByModelModLM(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))))
+#'
 predictByModelModLM=function(m, X) {
   X=toNumericTable(X)
   return(predict(m,X) > 0)

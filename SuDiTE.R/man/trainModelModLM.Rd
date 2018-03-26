@@ -4,7 +4,7 @@
 \alias{trainModelModLM}
 \title{Model by Tian et al 2014}
 \usage{
-trainModelModLM(Y, Trt, X)
+trainModelModLM(Y, Trt, X, opts)
 }
 \arguments{
 \item{Y}{is the binary response varibale}
@@ -12,6 +12,8 @@ trainModelModLM(Y, Trt, X)
 \item{Trt}{is the binary treatment variable}
 
 \item{X}{is the numeric covariates matrix}
+
+\item{opts}{is a list of options}
 }
 \value{
 a model that is able to classify clients into treatment and control group
@@ -20,5 +22,14 @@ a model that is able to classify clients into treatment and control group
 Model by Tian et al 2014
 }
 \examples{
+
+# Generating dataset
+Trt = rbinom(1000,1,0.5)
+X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+# Training
+m = trainModelModLM(Y,Trt,X)
+# Predicting a good group for new data
+sum(predictByModelModLM(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))))
 
 }

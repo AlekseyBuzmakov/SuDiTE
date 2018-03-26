@@ -17,3 +17,15 @@ a binary vector specifying the observations to be treated
 \description{
 Predicts if an observation should be treated or not by means of the model
 }
+\examples{
+
+# Generating dataset
+Trt = rbinom(1000,1,0.5)
+X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+# Training
+m = trainModelRandomForest(Y,Trt,X)
+# Predicting a good group for new data
+sum(predictByModelRandomForest(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))))
+
+}

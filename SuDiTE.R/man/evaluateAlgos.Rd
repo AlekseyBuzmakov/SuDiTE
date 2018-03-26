@@ -4,15 +4,16 @@
 \alias{evaluateAlgos}
 \title{Evaluates several algos by the given train-test split}
 \usage{
-evaluateAlgos(trainModelFuncs, predictByModelFuncs, subgroupQualityFunc, trainY,
-  trainTrt, trainX, testY, testTrt, testX)
+evaluateAlgos(models, subgroupQualityFuncs, trainY, trainTrt, trainX, testY,
+  testTrt, testX)
 }
 \arguments{
-\item{trainModelFuncs}{a vector of functions that build models. The prototype is function(Y,Trt,X), where Y is the response variable, Trt is the 0-1 treatment variable, and X is the covariate matrix.}
+\item{models}{is a vector of model descriptios that contains Train function, Train options, Predict function and the name of the model.
+The prototype of the train function is function(Y,Trt,X, opts),
+  where Y is the response variable, Trt is the 0-1 treatment variable, X is the covariate matrix, and opts is the options from the corresponding model.
+The prototype for the Predict function is function(m,X) where m is a trained model and X the observations for prediction.}
 
-\item{predictByModelFuncs}{a vector of functions that predicts by models build by the corresponding furnction from trainModelFuncs. The prototype is function(m,X), where m is the model returned by the corresponding function, and X is the covariate matrix.}
-
-\item{subgroupQualityFunc}{a function that evaluate the quality of a subgroup. The prototype is function(subgroup, Y, Trt), where subgroup is T-F vector defining a subgroup, and Y and Trt are similar as for the functions from trainModelFuncs}
+\item{subgroupQualityFuncs}{is a vector of functions that evaluate the quality of a subgroup. The prototype is function(subgroup, Y, Trt), where subgroup is T-F vector defining a subgroup, and Y and Trt are similar as for the functions from trainModelFuncs}
 
 \item{trainY}{a train response variable}
 
@@ -41,11 +42,15 @@ Takes a set of models and returns the quality of the selected groups by means of
 Trt = rbinom(1000,1,0.5)
 X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
 Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+# Defining models
+models=list(
+  list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, Opts=NULL),
+  list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, Opts=NULL)
+)
 # Evaluating algos
 res = evaluateAlgos(
-    c(trainModelRandomForest,trainModelModLM), # Two functions that trains the model
-    c(predictByModelRandomForest,predictByModelModLM), # The corresponding prediction functions
-    subgroupAverageTreatmentEffect, # The function that compute the quality of a subgroup
+    models, # The description of the evaluated models
+    c(subgroupAverageTreatmentEffect,subgroupTotalTreatmentEffect), # The set of functions that compute the quality of a subgroup
     Y[1:800], Trt[1:800], X[1:800,], # Train dataset
     Y[801:1000], Trt[801:1000], X[801:1000,] # Holdout dataset
     )
