@@ -1,6 +1,6 @@
-#' Evaluates several algos by the given train-test split
+#' Evaluates several algos by the given train-holdout split
 #'
-#' Evaluates several algos by the given train-test split
+#' Evaluates several algos by the given train-holdout split
 #'
 #' Takes a set of models and returns the quality of the selected groups by means of subgroupQualityFunc
 #'
@@ -12,10 +12,10 @@
 #' @param trainY a train response variable
 #' @param trainTrt a train treatment 0-1 variable
 #' @param trainX train covariates
-#' @param testY a test response variable
-#' @param testTrt a test treatment 0-1 variable
-#' @param testX test covariates
-#' @return a list with found subgroups in the test set, their sizes, qualities, and qualities of a random subset of similar size for all the algorithms
+#' @param holdoutY a holdout response variable
+#' @param holdoutTrt a holdout treatment 0-1 variable
+#' @param holdoutX holdout covariates
+#' @return a list with found subgroups in the holdout set, their sizes, qualities, and qualities of a random subset of similar size for all the algorithms
 #' @export
 #' @examples
 #'
@@ -39,12 +39,12 @@
 #'
 evaluateAlgos = function(
   models, subgroupQualityFuncs,
-  trainY, trainTrt, trainX, testY, testTrt, testX )
+  trainY, trainTrt, trainX, holdoutY, holdoutTrt, holdoutX )
 {
   stopifnot(length(trainY) == length(trainTrt)
             && length(trainTrt) == nrow(trainX))
-  stopifnot(length(testY) == length(testTrt)
-            && length(testTrt) == nrow(testX))
+  stopifnot(length(holdoutY) == length(holdoutTrt)
+            && length(holdoutTrt) == nrow(holdoutX))
 
   # We need vectors of length at least 2
   subgroups = NULL
@@ -57,10 +57,11 @@ evaluateAlgos = function(
     print(paste0("    Training model ", model$Name))
     m = model$TrainFunc(trainY, trainTrt, trainX, model$TrainOpts)
     print(paste0("    Testing model ", model$Name))
-    res = model$PredictFunc(m, testX)
+    res = model$PredictFunc(m, holdoutX)
     q=NULL
-    for( testFunc in subgroupQualityFuncs ) {
-     q = c(q, testFunc(res, testY, testTrt))
+    subgroupQualityFuncs=c(NULL,subgroupQualityFuncs) # Converting to vector
+    for( holdoutFunc in subgroupQualityFuncs ) {
+     q = c(q, holdoutFunc(res, holdoutY, holdoutTrt))
     }
     subgroups = cbind(subgroups, res)
     sizes = c(sizes, sum(res))
@@ -87,11 +88,11 @@ evaluateAlgos = function(
 #' @param dbY a response variable
 #' @param dbTrt a treatment 0-1 variable
 #' @param dbX train covariates
-#' @param numTrials a number of times a random division in train-test subdataset should be taken
+#' @param numTrials a number of times a random division in train-holdout subdataset should be taken
 #' @param splitFunc a function that splits the dataset into training and holdout sets
 #' @param splitOpts  the options that are passed to trainHoldoutSplittingFunc
 #'
-#' @return a list with found subgroups in the test set of length testProportion*length(dbY)*numTrials, their sizes, qualities, and qualities of a random subset of similar size for all the algorithms
+#' @return a list with found subgroups in the holdout set of length holdoutProportion*length(dbY)*numTrials, their sizes, qualities, and qualities of a random subset of similar size for all the algorithms
 #' @export
 #'
 #' @examples
@@ -126,7 +127,7 @@ crossValidateAlgos = function(
   stopifnot(is.numeric(numTrials))
   stopifnot(!is.null(splitFunc))
 
-  result = list(NumTrials = 5, TrainSize=NULL, TestSize=NULL,
+  result = list(NumTrials = 5, TrainSize=NULL, holdoutSize=NULL,
                 Subgroups = list(), Sizes = NULL,
                 Qualities = NULL, QRnd = NULL)
   for (trial in 1:numTrials) {
@@ -137,16 +138,16 @@ crossValidateAlgos = function(
     trainY = dbY[ths$Train]
     trainTrt = dbTrt[ths$Train]
 
-    testX = dbX[ths$Holdout, ]
-    testY = dbY[ths$Holdout]
-    testTrt = dbTrt[ths$Holdout]
+    holdoutX = dbX[ths$Holdout, ]
+    holdoutY = dbY[ths$Holdout]
+    holdoutTrt = dbTrt[ths$Holdout]
 
     res = evaluateAlgos(
       models,
       subgroupQualityFuncs,
-      trainY, trainTrt, trainX, testY, testTrt, testX )
+      trainY, trainTrt, trainX, holdoutY, holdoutTrt, holdoutX )
     result$TrainSize=c(result$TrainSize,length(ths$Train))
-    result$TestSize=c(result$TestSize,length(ths$Holdout))
+    result$holdoutSize=c(result$holdoutSize,length(ths$Holdout))
     result$Subgroups[[length(result$Subgroups)+1]] = res$Subgroups
     result$Sizes = rbind(result$Sizes, res$Sizes)
     res$Qualities=as.data.frame(res$Qualities)
