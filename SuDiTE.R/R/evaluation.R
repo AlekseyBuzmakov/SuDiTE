@@ -20,9 +20,10 @@
 #' @examples
 #'
 #' # Generating dataset
-#' Trt = rbinom(1000,1,0.5)
-#' X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
-#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+#' N = 1000
+#' Trt = rbinom(N,1,0.5)
+#' X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 #' # Defining models
 #' models=list(
 #'   list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, Opts=NULL),
@@ -98,9 +99,10 @@ evaluateAlgos = function(
 #' @examples
 #'
 #' # Generating dataset
-#' Trt = rbinom(1000,1,0.5)
-#' X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
-#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+#' N = 1000
+#' Trt = rbinom(N,1,0.5)
+#' X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 #' # Defining models
 #' models=list(
 #'   list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, Opts=NULL),
