@@ -20,20 +20,22 @@
 #' @examples
 #'
 #' # Generating dataset
-#' Trt = rbinom(1000,1,0.5)
-#' X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
-#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+#' N = 1000
+#' Trt = rbinom(N,1,0.5)
+#' X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 #' # Defining models
 #' models=list(
 #'   list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, Opts=NULL),
 #'   list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, Opts=NULL)
 #' )
+#' Ntr=0.8*N
 #' # Evaluating algos
 #' res = evaluateAlgos(
 #'     models, # The description of the evaluated models
 #'     c(subgroupAverageTreatmentEffect,subgroupTotalTreatmentEffect), # The set of functions that compute the quality of a subgroup
-#'     Y[1:800], Trt[1:800], X[1:800,], # Train dataset
-#'     Y[801:1000], Trt[801:1000], X[801:1000,] # Holdout dataset
+#'     Y[1:Ntr], Trt[1:Ntr], X[1:Ntr,], # Train dataset
+#'     Y[(Ntr+1):N], Trt[(Ntr+1):N], X[(Ntr+1):N,] # Holdout dataset
 #'     )
 #' print(res$Qualities)
 #'
@@ -98,9 +100,10 @@ evaluateAlgos = function(
 #' @examples
 #'
 #' # Generating dataset
-#' Trt = rbinom(1000,1,0.5)
-#' X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
-#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+#' N = 1000
+#' Trt = rbinom(N,1,0.5)
+#' X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 #' # Defining models
 #' models=list(
 #'   list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, Opts=NULL),
