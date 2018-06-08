@@ -2,10 +2,10 @@
 % Please edit documentation in R/evaluation.R
 \name{evaluateAlgos}
 \alias{evaluateAlgos}
-\title{Evaluates several algos by the given train-test split}
+\title{Evaluates several algos by the given train-holdout split}
 \usage{
-evaluateAlgos(models, subgroupQualityFuncs, trainY, trainTrt, trainX, testY,
-  testTrt, testX)
+evaluateAlgos(models, subgroupQualityFuncs, quantile.probs, trainY, trainTrt,
+  trainX, holdoutY, holdoutTrt, holdoutX)
 }
 \arguments{
 \item{models}{is a vector of model descriptios that contains Train function, Train options, Predict function and the name of the model.
@@ -15,23 +15,25 @@ The prototype for the Predict function is function(m,X) where m is a trained mod
 
 \item{subgroupQualityFuncs}{is a vector of functions that evaluate the quality of a subgroup. The prototype is function(subgroup, Y, Trt), where subgroup is T-F vector defining a subgroup, and Y and Trt are similar as for the functions from trainModelFuncs}
 
+\item{quantile.probs}{is a vector of probabilities for quantile in order to determine subgroups where an effect should be computed}
+
 \item{trainY}{a train response variable}
 
 \item{trainTrt}{a train treatment 0-1 variable}
 
 \item{trainX}{train covariates}
 
-\item{testY}{a test response variable}
+\item{holdoutY}{a holdout response variable}
 
-\item{testTrt}{a test treatment 0-1 variable}
+\item{holdoutTrt}{a holdout treatment 0-1 variable}
 
-\item{testX}{test covariates}
+\item{holdoutX}{holdout covariates}
 }
 \value{
-a list with found subgroups in the test set, their sizes, qualities, and qualities of a random subset of similar size for all the algorithms
+a list with found subgroups in the holdout set, their sizes, qualities, and qualities of a random subset of similar size for all the algorithms
 }
 \description{
-Evaluates several algos by the given train-test split
+Evaluates several algos by the given train-holdout split
 }
 \details{
 Takes a set of models and returns the quality of the selected groups by means of subgroupQualityFunc
@@ -39,20 +41,23 @@ Takes a set of models and returns the quality of the selected groups by means of
 \examples{
 
 # Generating dataset
-Trt = rbinom(1000,1,0.5)
-X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
-Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+N = 1000
+Trt = rbinom(N,1,0.5)
+X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 # Defining models
 models=list(
-  list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, Opts=NULL),
-  list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, Opts=NULL)
+  list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, TrainOpts=NULL),
+  list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, TrainOpts=NULL)
 )
+Ntr=0.8*N
 # Evaluating algos
 res = evaluateAlgos(
     models, # The description of the evaluated models
     c(subgroupAverageTreatmentEffect,subgroupTotalTreatmentEffect), # The set of functions that compute the quality of a subgroup
-    Y[1:800], Trt[1:800], X[1:800,], # Train dataset
-    Y[801:1000], Trt[801:1000], X[801:1000,] # Holdout dataset
+    seq(0,by=0.2,to = 1), # Groups of 20\%
+    Y[1:Ntr], Trt[1:Ntr], X[1:Ntr,], # Train dataset
+    Y[(Ntr+1):N], Trt[(Ntr+1):N], X[(Ntr+1):N,] # Holdout dataset
     )
 print(res$Qualities)
 

@@ -4,8 +4,8 @@
 \alias{crossValidateAlgos}
 \title{Evaluates the quality of different algos by cross-validation of their predictions}
 \usage{
-crossValidateAlgos(models, subgroupQualityFuncs, dbY, dbTrt, dbX, numTrials,
-  splitFunc, splitOpts)
+crossValidateAlgos(models, subgroupQualityFuncs, quantile.probs, dbY, dbTrt,
+  dbX, numTrials, splitFunc, splitOpts)
 }
 \arguments{
 \item{models}{is a vector of model descriptios that contains Train function, Train options, Predict function and the name of the model.
@@ -15,20 +15,22 @@ The prototype for the Predict function is function(m,X) where m is a trained mod
 
 \item{subgroupQualityFuncs}{is a vector of functions that evaluate the quality of a subgroup. The prototype is function(subgroup, Y, Trt), where subgroup is T-F vector defining a subgroup, and Y and Trt are similar as for the functions from trainModelFuncs}
 
+\item{quantile.probs}{is a vector of probabilities for quantile in order to determine subgroups where an effect should be computed}
+
 \item{dbY}{a response variable}
 
 \item{dbTrt}{a treatment 0-1 variable}
 
 \item{dbX}{train covariates}
 
-\item{numTrials}{a number of times a random division in train-test subdataset should be taken}
+\item{numTrials}{a number of times a random division in train-holdout subdataset should be taken}
 
 \item{splitFunc}{a function that splits the dataset into training and holdout sets}
 
 \item{splitOpts}{the options that are passed to trainHoldoutSplittingFunc}
 }
 \value{
-a list with found subgroups in the test set of length testProportion*length(dbY)*numTrials, their sizes, qualities, and qualities of a random subset of similar size for all the algorithms
+a list with found subgroups in the holdout set of length holdoutProportion*length(dbY)*numTrials, their sizes, qualities, and qualities of a random subset of similar size for all the algorithms
 }
 \description{
 Evaluates the quality of different algos by cross-validation of their predictions
@@ -39,19 +41,21 @@ Takes a set of models and returns the quality of the selected groups by means of
 \examples{
 
 # Generating dataset
-Trt = rbinom(1000,1,0.5)
-X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
-Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0 )
+N = 1000
+Trt = rbinom(N,1,0.5)
+X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 # Defining models
 models=list(
-  list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, Opts=NULL),
-  list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, Opts=NULL),
-  list(Name="ALL", TrainFunc=function(a,b,c,d){NULL}, PredictFunc=function(m,X){1:nrow(X)},Opts=NULL)
+  list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, TrainOpts=NULL),
+  list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, TrainOpts=NULL),
+  list(Name="ALL", TrainFunc=function(a,b,c,d){NULL}, PredictFunc=function(m,X){rep(1,nrow(X))},TrainOpts=NULL)
 )
 # Evaluating algos
 res = crossValidateAlgos(
     models, # The description of the evaluated models
     c(subgroupAverageTreatmentEffect,subgroupTotalTreatmentEffect), # The set of functions that compute the quality of a subgroup
+    seq(0,by=0.2,to = 1), # Groups of 20\%
     Y, Trt, X,
     numTrials = 5,
     balansedSplit, list(InitSplitProportion=0.2)
