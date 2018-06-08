@@ -72,7 +72,7 @@ evaluateAlgos = function(
     breaks=quantile(res,quantile.probs)
     # Computing efficience for a quantile
     for(i in 1:(length(quantile.probs)-1)) {
-      quant.result = list(Name=model$Name, Q.Left.Eq=breaks[i], Q.Right = breaks[i+1])
+      quant.result = list(Name=model$Name, Block = i, Q.Left.Eq=breaks[i], Q.Right = breaks[i+1])
       if( i < length(quantile.probs)-1) {
         sg = breaks[i] <= res & res < breaks[i+1] | breaks[i] == breaks[i+1] & breaks[i] == res
       } else {
@@ -81,7 +81,7 @@ evaluateAlgos = function(
       for( holdoutFunc in subgroupQualityFuncs ) {
         quant.result[length(quant.result)+1] = holdoutFunc(sg, holdoutY, holdoutTrt)
       }
-      names(quant.result)[-(1:3)]=paste0("QFunc",1:(length(quant.result)-3))
+      names(quant.result)[-(1:4)]=paste0("QFunc",1:(length(quant.result)-4))
       quant=rbind.data.frame(quant,quant.result,deparse.level = 0,stringsAsFactors = F)
     }
     subgroups = cbind(subgroups, res)
