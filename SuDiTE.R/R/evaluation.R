@@ -9,6 +9,7 @@
 #'    where Y is the response variable, Trt is the 0-1 treatment variable, X is the covariate matrix, and opts is the options from the corresponding model.
 #'  The prototype for the Predict function is function(m,X) where m is a trained model and X the observations for prediction.
 #' @param subgroupQualityFuncs is a vector of functions that evaluate the quality of a subgroup. The prototype is function(subgroup, Y, Trt), where subgroup is T-F vector defining a subgroup, and Y and Trt are similar as for the functions from trainModelFuncs
+#' @param quantile.probs is a vector of probabilities for quantile in order to determine subgroups where an effect should be computed
 #' @param trainY a train response variable
 #' @param trainTrt a train treatment 0-1 variable
 #' @param trainX train covariates
@@ -26,14 +27,15 @@
 #' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 #' # Defining models
 #' models=list(
-#'   list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, Opts=NULL),
-#'   list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, Opts=NULL)
+#'   list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, TrainOpts=NULL),
+#'   list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, TrainOpts=NULL)
 #' )
 #' Ntr=0.8*N
 #' # Evaluating algos
 #' res = evaluateAlgos(
 #'     models, # The description of the evaluated models
 #'     c(subgroupAverageTreatmentEffect,subgroupTotalTreatmentEffect), # The set of functions that compute the quality of a subgroup
+#'     seq(0,by=0.2,to = 1), # Groups of 20%
 #'     Y[1:Ntr], Trt[1:Ntr], X[1:Ntr,], # Train dataset
 #'     Y[(Ntr+1):N], Trt[(Ntr+1):N], X[(Ntr+1):N,] # Holdout dataset
 #'     )
@@ -41,6 +43,7 @@
 #'
 evaluateAlgos = function(
   models, subgroupQualityFuncs,
+  quantile.probs,
   trainY, trainTrt, trainX, holdoutY, holdoutTrt, holdoutX )
 {
   stopifnot(length(trainY) == length(trainTrt)
@@ -54,6 +57,7 @@ evaluateAlgos = function(
   qualities = NULL
   qrnd = NULL
   names = NULL
+  quant=NULL
   for(model in models) {
     names=c(names,model$Name)
     print(paste0("    Training model ", model$Name))
@@ -63,7 +67,22 @@ evaluateAlgos = function(
     q=NULL
     subgroupQualityFuncs=c(NULL,subgroupQualityFuncs) # Converting to vector
     for( holdoutFunc in subgroupQualityFuncs ) {
-     q = c(q, holdoutFunc(res, holdoutY, holdoutTrt))
+     q = c(q, holdoutFunc(res>0, holdoutY, holdoutTrt))
+    }
+    breaks=quantile(res,quantile.probs)
+    # Computing efficience for a quantile
+    for(i in 1:(length(quantile.probs)-1)) {
+      quant.result = list(Name=model$Name, Q.Left.Eq=breaks[i], Q.Right = breaks[i+1])
+      if( i < length(quantile.probs)-1) {
+        sg = breaks[i] <= res & res < breaks[i+1] | breaks[i] == breaks[i+1] & breaks[i] == res
+      } else {
+        sg = breaks[i] <= res & res <= breaks[i+1]
+      }
+      for( holdoutFunc in subgroupQualityFuncs ) {
+        quant.result[length(quant.result)+1] = holdoutFunc(sg, holdoutY, holdoutTrt)
+      }
+      names(quant.result)[-(1:3)]=paste0("QFunc",1:(length(quant.result)-3))
+      quant=rbind.data.frame(quant,quant.result,deparse.level = 0,stringsAsFactors = F)
     }
     subgroups = cbind(subgroups, res)
     sizes = c(sizes, sum(res))
@@ -72,7 +91,7 @@ evaluateAlgos = function(
   rownames(qualities)=names
   colnames(subgroups)=names
   names(sizes)=names
-  return(list(Subgroups = subgroups, Sizes = sizes, Qualities = qualities))
+  return(list(Subgroups = subgroups, Sizes = sizes, Qualities = qualities, Quantile=quant))
 }
 
 
@@ -87,6 +106,7 @@ evaluateAlgos = function(
 #'    where Y is the response variable, Trt is the 0-1 treatment variable, X is the covariate matrix, and opts is the options from the corresponding model.
 #'  The prototype for the Predict function is function(m,X) where m is a trained model and X the observations for prediction.
 #' @param subgroupQualityFuncs is a vector of functions that evaluate the quality of a subgroup. The prototype is function(subgroup, Y, Trt), where subgroup is T-F vector defining a subgroup, and Y and Trt are similar as for the functions from trainModelFuncs
+#' @param quantile.probs is a vector of probabilities for quantile in order to determine subgroups where an effect should be computed
 #' @param dbY a response variable
 #' @param dbTrt a treatment 0-1 variable
 #' @param dbX train covariates
@@ -106,14 +126,15 @@ evaluateAlgos = function(
 #' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 #' # Defining models
 #' models=list(
-#'   list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, Opts=NULL),
-#'   list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, Opts=NULL),
-#'   list(Name="ALL", TrainFunc=function(a,b,c,d){NULL}, PredictFunc=function(m,X){1:nrow(X)},Opts=NULL)
+#'   list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, TrainOpts=NULL),
+#'   list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, TrainOpts=NULL),
+#'   list(Name="ALL", TrainFunc=function(a,b,c,d){NULL}, PredictFunc=function(m,X){rep(1,nrow(X))},TrainOpts=NULL)
 #' )
 #' # Evaluating algos
 #' res = crossValidateAlgos(
 #'     models, # The description of the evaluated models
 #'     c(subgroupAverageTreatmentEffect,subgroupTotalTreatmentEffect), # The set of functions that compute the quality of a subgroup
+#'     seq(0,by=0.2,to = 1), # Groups of 20%
 #'     Y, Trt, X,
 #'     numTrials = 5,
 #'     balansedSplit, list(InitSplitProportion=0.2)
@@ -122,6 +143,7 @@ evaluateAlgos = function(
 #'
 crossValidateAlgos = function(
   models, subgroupQualityFuncs,
+  quantile.probs,
   dbY, dbTrt, dbX,
   numTrials, splitFunc, splitOpts )
 {
@@ -132,7 +154,7 @@ crossValidateAlgos = function(
 
   result = list(NumTrials = 5, TrainSize=NULL, holdoutSize=NULL,
                 Subgroups = list(), Sizes = NULL,
-                Qualities = NULL, QRnd = NULL)
+                Qualities = NULL, QRnd = NULL, Quantiles=NULL)
   for (trial in 1:numTrials) {
     print(paste0("Trial ", trial))
 
@@ -147,7 +169,7 @@ crossValidateAlgos = function(
 
     res = evaluateAlgos(
       models,
-      subgroupQualityFuncs,
+      subgroupQualityFuncs, quantile.probs,
       trainY, trainTrt, trainX, holdoutY, holdoutTrt, holdoutX )
     result$TrainSize=c(result$TrainSize,length(ths$Train))
     result$holdoutSize=c(result$holdoutSize,length(ths$Holdout))
@@ -158,6 +180,7 @@ crossValidateAlgos = function(
     res$Qualities$Model = rownames(res$Qualities)
     rownames(res$Qualities)=NULL
     result$Qualities = rbind(result$Qualities, res$Qualities)
+    result$Quantiles = rbind(result$Quantiles, res$Quantile)
   }
   result$Qualities$Model=as.factor(res$Qualities$Model)
   return(result)

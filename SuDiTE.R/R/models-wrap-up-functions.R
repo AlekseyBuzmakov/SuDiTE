@@ -45,7 +45,7 @@ trainModelRandomForest=function(Y, Trt, X, opts) {
 #'
 predictByModelRandomForest=function(m, X) {
   tbl=predict(m,X)
-  return( (tbl[,1]-tbl[,2]) > 0)
+  return(tbl[,1]-tbl[,2])
 }
 
 #' Transformations of factors to logical variables
@@ -125,5 +125,5 @@ trainModelModLM=function(Y,Trt,X, opts) {
 #'
 predictByModelModLM=function(m, X) {
   X=toNumericTable(X)
-  return(predict(m,X) > 0)
+  return(predict(m,X))
 }
