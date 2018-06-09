@@ -173,6 +173,7 @@ crossValidateAlgos = function(
       trainY, trainTrt, trainX, holdoutY, holdoutTrt, holdoutX )
     result$TrainSize=c(result$TrainSize,length(ths$Train))
     result$holdoutSize=c(result$holdoutSize,length(ths$Holdout))
+    rownames(res$Subgroups)=ths$Holdout
     result$Subgroups[[length(result$Subgroups)+1]] = res$Subgroups
     result$Sizes = rbind(result$Sizes, res$Sizes)
     res$Qualities=as.data.frame(res$Qualities)
