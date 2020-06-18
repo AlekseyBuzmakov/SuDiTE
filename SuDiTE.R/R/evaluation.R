@@ -226,7 +226,9 @@ crossValidateAlgos_par = function(
   numTrials, splitFunc, splitOpts )
 {
   # Prerequesities
-
+  ####NEWNEWNEW####
+  require(parallel)
+  ####NEWNEWNEW####
   #кластер
   n_cores <- detectCores() - 1
   cl <- makeCluster(n_cores)
