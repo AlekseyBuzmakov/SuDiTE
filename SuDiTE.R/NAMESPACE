@@ -2,6 +2,7 @@
 
 export(balansedSplit)
 export(crossValidateAlgos)
+export(crossValidateAlgos_par)
 export(evaluateAlgos)
 export(predictByModelModLM)
 export(predictByModelRandomForest)
