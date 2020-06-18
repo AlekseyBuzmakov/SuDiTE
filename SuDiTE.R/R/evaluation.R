@@ -262,7 +262,7 @@ crossValidateAlgos_par = function(
     list(list(Name = model$Name, TrainFunc = model$TrainFunc, PredictFunc = model$PredictFunc, TuneFunc = model$TuneFunc, TuneOpts = model$TuneOpts, TrainOpts = model$TrainOpts))
   }
 
-  clusterExport(cl, c("models", "modifyDataByWeisberg"))
+  clusterExport(cl, c("models"))
 
   models <- parSapply(cl, models, parallel_tune, tuneY, tuneTrt, tuneX)
 
