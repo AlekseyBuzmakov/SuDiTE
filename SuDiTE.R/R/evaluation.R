@@ -148,11 +148,11 @@ crossValidateAlgos = function(
   numTrials, splitFunc, splitOpts )
 {
   # Prerequesities
-  stopifnot(length(dbY) == length(dbTrt) && length(dbTrt) == nrow(dbX))
+  stopifnot(NROW(dbY) == NROW(dbTrt) && NROW(dbTrt) == NROW(dbX))
   stopifnot(is.numeric(numTrials))
   stopifnot(!is.null(splitFunc))
 
-  result = list(NumTrials = 5, TrainSize=NULL, holdoutSize=NULL,
+  result = list(NumTrials = numTrials, TrainSize=NULL, holdoutSize=NULL,
                 Subgroups = list(), Sizes = NULL,
                 Qualities = NULL, QRnd = NULL, Quantiles=NULL)
   for (trial in 1:numTrials) {
@@ -264,7 +264,7 @@ crossValidateAlgos_par = function(
     list(list(Name = model$Name, TrainFunc = model$TrainFunc, PredictFunc = model$PredictFunc, TuneFunc = model$TuneFunc, TuneOpts = model$TuneOpts, TrainOpts = model$TrainOpts))
   }
 
-  clusterExport(cl, c("models", "subgroupQualityFuncs"))
+  clusterExport(cl, c("models"))
 
   models <- parSapply(cl, models, parallel_tune, tuneY, tuneTrt, tuneX)
 
@@ -279,7 +279,7 @@ crossValidateAlgos_par = function(
   numTrials <- 1:numTrials
   num <- split(numTrials, ceiling(seq_along(numTrials)/4))
 
-  parallel_loop <- function(x) {
+  parallel_loop <- function(x, subgroupQualityFuncs) {
     numTrials = x
     for (trial in numTrials) {
       print(paste0("Trial ", trial))
