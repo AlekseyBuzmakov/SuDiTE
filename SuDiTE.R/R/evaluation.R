@@ -311,7 +311,7 @@ crossValidateAlgos_par = function(
     }
   }
 
-  res <- parSapply(cl, num, parallel_loop)
+  res <- parSapply(cl, num, subgroupQualityFuncs, parallel_loop)
 
   ### функция распараллеливания кросс-валидации ###
 
