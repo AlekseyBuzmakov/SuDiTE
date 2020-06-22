@@ -264,7 +264,7 @@ crossValidateAlgos_par = function(
     list(list(Name = model$Name, TrainFunc = model$TrainFunc, PredictFunc = model$PredictFunc, TuneFunc = model$TuneFunc, TuneOpts = model$TuneOpts, TrainOpts = model$TrainOpts))
   }
 
-  clusterExport(cl, c("models"))
+  clusterExport(cl, c("models", "subgroupQualityFuncs"))
 
   models <- parSapply(cl, models, parallel_tune, tuneY, tuneTrt, tuneX)
 
@@ -311,7 +311,7 @@ crossValidateAlgos_par = function(
     }
   }
 
-  parSapply(cl, num, parallel_loop)
+  res <- parSapply(cl, num, parallel_loop)
 
   ### функция распараллеливания кросс-валидации ###
 
