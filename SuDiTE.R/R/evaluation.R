@@ -264,7 +264,7 @@ crossValidateAlgos_par = function(
     list(list(Name = model$Name, TrainFunc = model$TrainFunc, PredictFunc = model$PredictFunc, TuneFunc = model$TuneFunc, TuneOpts = model$TuneOpts, TrainOpts = model$TrainOpts))
   }
 
-  clusterExport(cl, c("models"))
+  clusterExport(cl, c("models", "subgroupQualityFuncs"))
 
   models <- parSapply(cl, models, parallel_tune, tuneY, tuneTrt, tuneX)
 
@@ -279,8 +279,9 @@ crossValidateAlgos_par = function(
   numTrials <- 1:numTrials
   num <- split(numTrials, ceiling(seq_along(numTrials)/4))
 
-  parallel_loop <- function(x, subgroupQualityFuncs) {
+  parallel_loop <- function(x, y) {
     numTrials = x
+    subgroupQualityFuncs = y
     for (trial in numTrials) {
       print(paste0("Trial ", trial))
 
