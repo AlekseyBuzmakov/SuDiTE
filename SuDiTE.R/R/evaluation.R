@@ -290,6 +290,8 @@ crossValidateAlgos_par = function(
   #num <- split(numTrials, ceiling(seq_along(numTrials)/4))
   num <- split(numTrials,cut(numTrials,quantile(numTrials,(0:4)/4), include.lowest=TRUE, labels=FALSE))
 
+  print("1")
+
   parallel_loop <- function(numTrials) {
     for (trial in numTrials) {
       print(paste0("Trial ", trial))
@@ -323,12 +325,28 @@ crossValidateAlgos_par = function(
     return(result)
   }
 
+
+  print("2")
+
   res <- parLapply(cl, num, parallel_loop)
+
+  print("3")
+
   stopCluster(cl)
 
+  print("4")
+
   results = res[[1]]
+
+  print("5")
+
   results$Subgroups = NULL
+
+  print("6")
+
   results$QRnd = NULL
+
+  print("7")
 
   for(i in 2:length(res)) {
     res_i <- res[[i]]
@@ -340,6 +358,8 @@ crossValidateAlgos_par = function(
   results$Qualities=rbind(results$Qualities, res_i$Qualities)
   results$Quantiles=rbind(results$Quantiles, res_i$Quantiles)
   }
+
+  print("8")
 
   return(results)
 
