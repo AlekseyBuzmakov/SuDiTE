@@ -2,7 +2,7 @@
 % Please edit documentation in R/models-wrap-up-functions.R
 \name{modifyDataByWeisberg}
 \alias{modifyDataByWeisberg}
-\title{Covariate transformation as defined by Weisberg}
+\title{Outcome transformation as defined by Weisberg}
 \usage{
 modifyDataByWeisberg(Y, Trt)
 }
@@ -12,8 +12,8 @@ modifyDataByWeisberg(Y, Trt)
 \item{Trt}{the binary treatment varibale}
 }
 \value{
-the modified covariate matrix
+the modified outcome vector
 }
 \description{
-Covariate transformation as defined by Weisberg
+Outcome transformation as defined by Weisberg
 }

@@ -13,7 +13,8 @@ crossValidateAlgos_par(
   dbX,
   numTrials,
   splitFunc,
-  splitOpts
+  splitOpts,
+  numCores
 )
 }
 \arguments{
@@ -37,16 +38,41 @@ The prototype for the Predict function is function(m,X) where m is a trained mod
 \item{splitFunc}{a function that splits the dataset into training and holdout sets}
 
 \item{splitOpts}{the options that are passed to trainHoldoutSplittingFunc}
+
+\item{numCores}{a number of CPU Cores used in parallel computation}
 }
 \value{
 a list with found subgroups in the holdout set of length holdoutProportion*length(dbY)*numTrials, their sizes, qualities, and qualities of a random subset of similar size for all the algorithms
 }
 \description{
-Evaluates the quality of different algos by parallel cross-validation of their predictions
+Evaluates the quality of different algos by parallel cross-validation of their predictions allowing tuning of algos
 }
 \details{
 Takes a set of models and returns the quality of the selected groups by means of subgroupQualityFunc in Cross-Validation
 }
 \examples{
+
+# Generating dataset
+N = 1000
+Trt = rbinom(N,1,0.5)
+X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
+# Defining models
+models=list(
+  list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, TrainOpts=NULL, TuneOpts=NULL),
+  list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, TrainOpts=NULL, TuneOpts=NULL),
+  list(Name="ALL", TrainFunc=function(a,b,c,d){NULL}, PredictFunc=function(m,X){rep(1,nrow(X))},TrainOpts=NULL, TuneOpts=NULL)
+)
+# Evaluating algos
+res = crossValidateAlgos_par(
+    models, # The description of the evaluated models
+    c(subgroupAverageTreatmentEffect,subgroupTotalTreatmentEffect), # The set of functions that compute the quality of a subgroup
+    seq(0, by = 0.2, to = 1), # Groups of 20\%
+    Y, Trt, X,
+    numTrials = 17,
+    randomSplit, list(TestProportion = 0.5),
+    numCores = 20
+    )
+aggregate(cbind(V1, V2) ~ Model, res$Qualities, FUN=mean)
 
 }

@@ -2,21 +2,33 @@
 % Please edit documentation in R/Predict.R
 \name{predictUpliftModelRF}
 \alias{predictUpliftModelRF}
-\title{Predicts if an observation should be treated or not by means of the model}
+\title{Predicts if an observation should be treated or not by means difference in predictions between two independent Uplift Random forest (Guelman, 2014) models (Predict function for *trainUpliftModelRF*)}
 \usage{
-predictUpliftModelRF(m, X)
+predictUpliftModelRF(m, X, opts = NULL)
 }
 \arguments{
-\item{m}{a model trained with trainModelRandomForest}
+\item{m}{a model trained with *trainUpliftModelRF*}
 
 \item{X}{is the covariate matrix}
+
+\item{opts}{is a list of options (NOTE: fraction is one available option, it defines percent (from 0 to 1) of total observations with highest predicted PTE, which are then used in obtaining estimates of model performance)}
 }
 \value{
 a binary vector specifying the observations to be treated
 }
 \description{
-Predicts if an observation should be treated or not by means of the model
+Predicts if an observation should be treated or not by means difference in predictions between two independent Uplift Random forest (Guelman, 2014) models (Predict function for *trainUpliftModelRF*)
 }
 \examples{
+
+# Generating dataset
+N = 1000
+Trt = rbinom(N,1,0.5)
+X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
+# Fitting model
+m = trainUpliftModelRF(Y, Trt, X, opts = list(split_method = "Chisq", ntree = 55, bag.fraction = 0.5))
+# Predicting a good group for new data, target is top 30\% observations with highest predicted PTE
+predictUpliftModelRF(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000)), opts = list(fraction = 0.3))
 
 }

@@ -196,7 +196,7 @@ NULL
 
 #' Evaluates the quality of different algos by parallel cross-validation of their predictions
 #'
-#' Evaluates the quality of different algos by parallel cross-validation of their predictions
+#' Evaluates the quality of different algos by parallel cross-validation of their predictions allowing tuning of algos
 #'
 #' Takes a set of models and returns the quality of the selected groups by means of subgroupQualityFunc in Cross-Validation
 #'
@@ -211,26 +211,48 @@ NULL
 #' @param dbX train covariates
 #' @param numTrials a number of times a random division in train-holdout subdataset should be taken
 #' @param splitFunc a function that splits the dataset into training and holdout sets
-#' @param splitOpts  the options that are passed to trainHoldoutSplittingFunc
+#' @param splitOpts the options that are passed to trainHoldoutSplittingFunc
+#' @param numCores a number of CPU Cores used in parallel computation
+#'
 #'
 #' @return a list with found subgroups in the holdout set of length holdoutProportion*length(dbY)*numTrials, their sizes, qualities, and qualities of a random subset of similar size for all the algorithms
 #' @export
 #'
 #' @examples
 #'
-# crossValidateAlgos_par
+#' # Generating dataset
+#' N = 1000
+#' Trt = rbinom(N,1,0.5)
+#' X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+#' Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
+#' # Defining models
+#' models=list(
+#'   list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, TrainOpts=NULL, TuneOpts=NULL),
+#'   list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, TrainOpts=NULL, TuneOpts=NULL),
+#'   list(Name="ALL", TrainFunc=function(a,b,c,d){NULL}, PredictFunc=function(m,X){rep(1,nrow(X))},TrainOpts=NULL, TuneOpts=NULL)
+#' )
+#' # Evaluating algos
+#' res = crossValidateAlgos_par(
+#'     models, # The description of the evaluated models
+#'     c(subgroupAverageTreatmentEffect,subgroupTotalTreatmentEffect), # The set of functions that compute the quality of a subgroup
+#'     seq(0, by = 0.2, to = 1), # Groups of 20%
+#'     Y, Trt, X,
+#'     numTrials = 17,
+#'     randomSplit, list(TestProportion = 0.5),
+#'     numCores = 20
+#'     )
+#' aggregate(cbind(V1, V2) ~ Model, res$Qualities, FUN=mean)
+#'
 crossValidateAlgos_par = function(
   models, subgroupQualityFuncs,
   quantile.probs,
   dbY, dbTrt, dbX,
-  numTrials, splitFunc, splitOpts )
+  numTrials, splitFunc, splitOpts, numCores )
 {
   # Prerequesities
-  ####NEWNEWNEW####
   require(parallel)
-  ####NEWNEWNEW####
-  #кластер
-  n_cores <- detectCores() - 1
+
+  n_cores <- ifelse(numCores <= 0 || is.numeric(numCores) == F || numCores >= detectCores(), detectCores() - 1, numCores)
   cl <- makeCluster(n_cores)
 
   stopifnot(NROW(dbY) == NROW(dbTrt) && NROW(dbTrt) == NROW(dbX))
@@ -241,19 +263,13 @@ crossValidateAlgos_par = function(
                 Subgroups = list(), Sizes = NULL,
                 Qualities = NULL, QRnd = NULL, Quantiles=NULL)
 
-  #######################
-
-  thsTune = splitFunc(splitOpts,dbY,dbTrt,dbX)  ### - тюнинг всех моделей на одном датасете (две опции (splitOpts): если тюнинг, то одна опция, если нет - то другая)
+  thsTune = splitFunc(splitOpts,dbY,dbTrt,dbX)
   tuneX = dbX[thsTune$Train,]
-  tuneY = dbY[thsTune$Train,]
-  tuneTrt = dbTrt[thsTune$Train,]
+  tuneY = dbY[thsTune$Train]
+  tuneTrt = dbTrt[thsTune$Train]
 
 
-  ### функция распараллеливания тюнинга ###
-
-
-  parallel_tune <- function(x, tuneY, tuneTrt, tuneX) {
-    model = x
+  parallel_tune <- function(model, tuneY, tuneTrt, tuneX) {
     names=c(names,model$Name)
     if (is.null(model$TuneOpts) == T) {
       model$TrainOpts = model$TrainOpts
@@ -264,35 +280,28 @@ crossValidateAlgos_par = function(
     list(list(Name = model$Name, TrainFunc = model$TrainFunc, PredictFunc = model$PredictFunc, TuneFunc = model$TuneFunc, TuneOpts = model$TuneOpts, TrainOpts = model$TrainOpts))
   }
 
-  clusterExport(cl, c("models", "subgroupQualityFuncs"))
+
+  clusterExport(cl, c("models", "subgroupQualityFuncs", "evaluateAlgos"), envir = environment())
 
   models <- parSapply(cl, models, parallel_tune, tuneY, tuneTrt, tuneX)
-
-  ### функция распараллеливания тюнинга ###
-
-
-  #######################
-
-
-  ### функция распараллеливания кросс-валидации ###
+  print("Tuning is over")
 
   numTrials <- 1:numTrials
-  num <- split(numTrials, ceiling(seq_along(numTrials)/4))
+  #num <- split(numTrials, ceiling(seq_along(numTrials)/4))
+  num <- split(numTrials,cut(numTrials,quantile(numTrials,(0:4)/4), include.lowest=TRUE, labels=FALSE))
 
-  parallel_loop <- function(x, y) {
-    numTrials = x
-    subgroupQualityFuncs = y
+  parallel_loop <- function(numTrials) {
     for (trial in numTrials) {
       print(paste0("Trial ", trial))
 
       ths = splitFunc(splitOpts,dbY,dbTrt,dbX)
       trainX = dbX[ths$Train, ]
-      trainY = dbY[ths$Train,]
-      trainTrt = dbTrt[ths$Train,]
+      trainY = dbY[ths$Train]
+      trainTrt = dbTrt[ths$Train]
 
       holdoutX = dbX[ths$Holdout, ]
-      holdoutY = dbY[ths$Holdout,]
-      holdoutTrt = dbTrt[ths$Holdout,]
+      holdoutY = dbY[ths$Holdout]
+      holdoutTrt = dbTrt[ths$Holdout]
 
       res = evaluateAlgos(
         models,
@@ -310,17 +319,33 @@ crossValidateAlgos_par = function(
       result$Qualities = rbind(result$Qualities, res$Qualities)
       result$Quantiles = rbind(result$Quantiles, res$Quantile)
     }
+    result$Qualities$Model=as.factor(res$Qualities$Model)
+    return(result)
   }
 
-  res <- parSapply(cl, num, subgroupQualityFuncs, parallel_loop)
-
-  ### функция распараллеливания кросс-валидации ###
-
-
-
-  result$Qualities$Model=as.factor(res$Qualities$Model)
-  return(result)
-
-  #
+  res <- parLapply(cl, num, parallel_loop)
   stopCluster(cl)
+
+  results = res[[1]]
+  results$Subgroups = NULL
+  results$QRnd = NULL
+
+  for(i in 2:length(res)) {
+    res_i <- res[[i]]
+  results$TrainSize=c(results$TrainSize, res_i$TrainSize)
+  results$holdoutSize=c(results$holdoutSize, res_i$holdoutSize)
+  results$Sizes=rbind(results$Sizes, res_i$Sizes)
+  results$Qualities=as.data.frame(results$Qualities)
+  rownames(results$Qualities)=NULL
+  results$Qualities=rbind(results$Qualities, res_i$Qualities)
+  results$Quantiles=rbind(results$Quantiles, res_i$Quantiles)
+  }
+
+  return(results)
+
 }
+
+
+
+
+

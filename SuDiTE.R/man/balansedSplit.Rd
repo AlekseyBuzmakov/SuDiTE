@@ -7,11 +7,11 @@
 balansedSplit(opts, dbY, dbTrt, dbX)
 }
 \arguments{
-\item{dbY}{is Y componnet of the dataset}
+\item{dbY}{is Y component of the dataset}
 
-\item{dbTrt}{is Trt componnet of the dataset}
+\item{dbTrt}{is Trt component of the dataset}
 
-\item{dbX}{is X componnet of the dataset}
+\item{dbX}{is X component of the dataset}
 
 \item{opts$InitDataPropotion}{defines proportion of a dataset that is randomly assigned to train and holdout sets}
 

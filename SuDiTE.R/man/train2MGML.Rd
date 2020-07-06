@@ -2,7 +2,7 @@
 % Please edit documentation in R/Train.R
 \name{train2MGML}
 \alias{train2MGML}
-\title{Train Two models GLM}
+\title{Train function for difference score method using generalized linear models}
 \usage{
 train2MGML(Y, Trt, X, opts = NULL)
 }
@@ -13,14 +13,22 @@ train2MGML(Y, Trt, X, opts = NULL)
 
 \item{X}{is the numeric covariates matrix}
 
-\item{opts}{is a list of options}
+\item{opts}{is a list of options to fit models, Trt is a list of options for model based on the treated observations (Trt = 1), and Non_Trt is a list of options for model based on the control observations (Trt = 0). Available parameters are alpha, lambda}
 }
 \value{
-a model that is able to classify clients into treatment and control group
+a list of models that are able to classify clients into treatment and control group
 }
 \description{
-Train Two models GLM
+This function fits two independent generalized linear models for the binary response Y, one based on the treated observations (Trt = 1), and one based on the control observations (Trt = 0)
 }
 \examples{
+
+# Generating dataset
+N = 1000
+Trt = rbinom(N,1,0.5)
+X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
+# Fitting models
+train2MGML(Y, Trt, X, opts = list(Trt = list(alpha = 1, lambda = 0.25), Non_Trt = list(alpha = 0, lambda = 0.15)))
 
 }

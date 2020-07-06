@@ -2,7 +2,7 @@
 % Please edit documentation in R/Train.R
 \name{train2MRF}
 \alias{train2MRF}
-\title{Train Two models Random Forest}
+\title{Train function for difference score method using Random Forest models}
 \usage{
 train2MRF(Y, Trt, X, opts = NULL)
 }
@@ -13,14 +13,22 @@ train2MRF(Y, Trt, X, opts = NULL)
 
 \item{X}{is the numeric covariates matrix}
 
-\item{opts}{is a list of options}
+\item{opts}{is a list of options to fit models, Trt is a list of options for model based on the treated observations (Trt = 1), and Non_Trt is a list of options for model based on the control observations (Trt = 0). Available parameters are mtry, ntree, nodesize}
 }
 \value{
-a model that is able to classify clients into treatment and control group
+a list of models that are able to classify clients into treatment and control group
 }
 \description{
-Train Two models Random Forest
+This function fits two independent Random Forest models for the binary response Y, one based on the treated observations (Trt = 1), and one based on the control observations (Trt = 0)
 }
 \examples{
+
+# Generating dataset
+N = 1000
+Trt = rbinom(N,1,0.5)
+X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
+# Fitting models
+train2MRF(Y, Trt, X, opts = list(Trt = list(mtry = 2, ntree = 15, nodesize = 200), Non_Trt = list(mtry = 2, ntree = 15, nodesize = 200)))
 
 }

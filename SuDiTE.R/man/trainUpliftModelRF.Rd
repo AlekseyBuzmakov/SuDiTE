@@ -2,7 +2,7 @@
 % Please edit documentation in R/Train.R
 \name{trainUpliftModelRF}
 \alias{trainUpliftModelRF}
-\title{Train Uplift model}
+\title{Train function for Uplift Random forest model}
 \usage{
 trainUpliftModelRF(Y, Trt, X, opts)
 }
@@ -13,14 +13,25 @@ trainUpliftModelRF(Y, Trt, X, opts)
 
 \item{X}{is the numeric covariates matrix}
 
-\item{opts}{is a list of options}
+\item{opts}{is a list of options or list of model parameters such as split_method, ntree, bag.fraction}
 }
 \value{
 a model that is able to classify clients into treatment and control group
 }
 \description{
+This function fits Uplift Random forest model based on Guelman, 2014
+}
+\details{
 Train Uplift model
 }
 \examples{
+
+# Generating dataset
+N = 1000
+Trt = rbinom(N,1,0.5)
+X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
+# Fitting models
+trainUpliftModelRF(Y, Trt, X, opts = list(split_method = "Chisq", ntree = 55, bag.fraction = 0.5))
 
 }

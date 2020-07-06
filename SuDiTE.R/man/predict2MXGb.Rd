@@ -2,21 +2,33 @@
 % Please edit documentation in R/Predict.R
 \name{predict2MXGb}
 \alias{predict2MXGb}
-\title{Predicts if an observation should be treated or not by means of the model}
+\title{Predicts if an observation should be treated or not by means difference in predictions between two independent XGboost models (Predict function for *train2MXGb*)}
 \usage{
-predict2MXGb(m, X)
+predict2MXGb(m, X, opts = NULL)
 }
 \arguments{
-\item{m}{a model trained with trainModelRandomForest}
+\item{m}{a model trained with *train2MXGb*}
 
 \item{X}{is the covariate matrix}
+
+\item{opts}{is a list of options (NOTE: fraction is one available option, it defines percent (from 0 to 1) of total observations with highest predicted PTE, which are then used in obtaining estimates of model performance)}
 }
 \value{
 a binary vector specifying the observations to be treated
 }
 \description{
-Predicts if an observation should be treated or not by means of the model
+Predicts if an observation should be treated or not by means difference in predictions between two independent XGboost models (Predict function for *train2MXGb*)
 }
 \examples{
+
+# Generating dataset
+N = 1000
+Trt = rbinom(N,1,0.5)
+X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
+# Fitting model
+m = train2MXGb(Y, Trt, X, opts = list(Trt = list(nrounds = 15, eta = 0.3, subsample = 0.5, depth = 4), Non_Trt = list(nrounds = 10, eta = 0.4, subsample = 0.75, depth = 3)))
+# Predicting a good group for new data, target is top 30\% observations with highest predicted PTE
+predict2MXGb(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000)), opts = list(fraction = 0.3))
 
 }

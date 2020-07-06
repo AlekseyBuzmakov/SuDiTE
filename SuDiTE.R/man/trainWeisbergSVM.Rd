@@ -2,7 +2,7 @@
 % Please edit documentation in R/Train.R
 \name{trainWeisbergSVM}
 \alias{trainWeisbergSVM}
-\title{Train Weisberg SVM}
+\title{Train function for modified outcome method using SVM}
 \usage{
 trainWeisbergSVM(Y, Trt, X, opts = NULL)
 }
@@ -13,14 +13,22 @@ trainWeisbergSVM(Y, Trt, X, opts = NULL)
 
 \item{X}{is the numeric covariates matrix}
 
-\item{opts}{is a list of options}
+\item{opts}{is a list of options or list of model parameters such as scale, kernel, subset}
 }
 \value{
 a model that is able to classify clients into treatment and control group
 }
 \description{
-Train Weisberg SVM
+This function fits SVM model where binary response transformation as defined by Weisberg et al., 2015 is used
 }
 \examples{
+
+# Generating dataset
+N = 1000
+Trt = rbinom(N,1,0.5)
+X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
+# Fitting model
+trainWeisbergSVM(Y, Trt, X, opts = list(scale = F, kernel = "linear", subset = 0.5))
 
 }

@@ -2,7 +2,7 @@
 % Please edit documentation in R/Train.R
 \name{trainTianGLM}
 \alias{trainTianGLM}
-\title{Train Tian GLM}
+\title{Train function for modified covariate method using generalized linear model}
 \usage{
 trainTianGLM(Y, Trt, X, opts = NULL)
 }
@@ -13,14 +13,22 @@ trainTianGLM(Y, Trt, X, opts = NULL)
 
 \item{X}{is the numeric covariates matrix}
 
-\item{opts}{is a list of options}
+\item{opts}{is a list of options or list of model parameters such as}
 }
 \value{
 a model that is able to classify clients into treatment and control group
 }
 \description{
-Train Tian GLM
+This function fits generalized linear model where covariate transformation as defined by Tian et al., 2014 is used
 }
 \examples{
+
+# Generating dataset
+N = 1000
+Trt = rbinom(N,1,0.5)
+X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
+Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
+# Fitting model
+trainTianGLM(Y, Trt, X, opts = list(alpha = 0, lambda = 0.15))
 
 }

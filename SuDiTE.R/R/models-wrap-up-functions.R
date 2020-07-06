@@ -128,12 +128,12 @@ predictByModelModLM=function(m, X) {
   return(predict(m,X))
 }
 
-#' Covariate transformation as defined by Weisberg
+#' Outcome transformation as defined by Weisberg
 #'
 #' @param Trt the binary treatment varibale
 #' @param Y the binary response varibale
 #'
-#' @return the modified covariate matrix
+#' @return the modified outcome vector
 modifyDataByWeisberg = function(Y, Trt) {
   return(Trt*Y + (1 - Trt)*(1 - Y))
 }
