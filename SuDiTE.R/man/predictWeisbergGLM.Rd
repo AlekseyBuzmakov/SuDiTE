@@ -2,22 +2,20 @@
 % Please edit documentation in R/Predict.R
 \name{predictWeisbergGLM}
 \alias{predictWeisbergGLM}
-\title{Predicts if an observation should be treated or not by means of the generalized linear model where binary response transformation as defined by Weisberg et al., 2015 is used (Predict function for *trainWeisbergGLM*)}
+\title{Predict function for trainWeisbergGLM}
 \usage{
-predictWeisbergGLM(m, X, opts = NULL)
+predictWeisbergGLM(m, X)
 }
 \arguments{
-\item{m}{a model trained with *trainWeisbergGLM*}
+\item{m}{a model trained with trainWeisbergGLM}
 
 \item{X}{is the covariate matrix}
-
-\item{opts}{is a list of options (NOTE: fraction is one available option, it defines percent (from 0 to 1) of total observations with highest predicted PTE, which are then used in obtaining estimates of model performance)}
 }
 \value{
-a binary vector specifying the observations to be treated
+a vector with predicted PTE
 }
 \description{
-Predicts if an observation should be treated or not by means of the generalized linear model where binary response transformation as defined by Weisberg et al., 2015 is used (Predict function for *trainWeisbergGLM*)
+Predicts PTE of observations by means of the generalized linear model where binary response transformation as defined by Weisberg et al., 2015 is used (Predict function for trainWeisbergGLM)
 }
 \examples{
 
@@ -28,7 +26,7 @@ X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
 Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 # Fitting model
 m = trainWeisbergGLM(Y, Trt, X, opts = list(alpha = 0, lambda = 0.15))
-# Predicting a good group for new data, target is top 30\% observations with highest predicted PTE
-predictWeisbergGLM(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000)), opts = list(fraction = 0.3))
+# Predicting PTE
+predictWeisbergGLM(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000)))
 
 }

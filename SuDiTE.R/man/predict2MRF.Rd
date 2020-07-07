@@ -2,22 +2,20 @@
 % Please edit documentation in R/Predict.R
 \name{predict2MRF}
 \alias{predict2MRF}
-\title{Predicts if an observation should be treated or not by means difference in predictions between two independent Random Forest models (Predict function for *train2MRF*)}
+\title{Predict function for train2MRF}
 \usage{
-predict2MRF(m, X, opts = NULL)
+predict2MRF(m, X)
 }
 \arguments{
-\item{m}{a model trained with *train2MRF*}
+\item{m}{a model trained with train2MRF}
 
 \item{X}{is the covariate matrix}
-
-\item{opts}{is a list of options (NOTE: fraction is one available option, it defines percent (from 0 to 1) of total observations with highest predicted PTE, which are then used in obtaining estimates of model performance)}
 }
 \value{
-a binary vector specifying the observations to be treated
+a vector with predicted PTE
 }
 \description{
-Predicts if an observation should be treated or not by means difference in predictions between two independent Random Forest models (Predict function for *train2MRF*)
+Predicts PTE of observations by means difference in predictions between two independent Random Forest models (Predict function for train2MRF)
 }
 \examples{
 
@@ -28,7 +26,7 @@ X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
 Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 # Fitting model
 m = train2MRF(Y, Trt, X, opts = list(Trt = list(mtry = 2, ntree = 15, nodesize = 200), Non_Trt = list(mtry = 2, ntree = 15, nodesize = 200)))
-# Predicting a good group for new data, target is top 30\% observations with highest predicted PTE
-predict2MRF(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000)), opts = list(fraction = 0.3))
+# Predicting PTE
+predict2MRF(m, data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000)))
 
 }

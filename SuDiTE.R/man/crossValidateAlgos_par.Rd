@@ -58,11 +58,26 @@ Trt = rbinom(N,1,0.5)
 X = data.frame(X1=rbinom(N,1,0.6), X2=rnorm(N), X3=rnorm(N))
 Y = as.numeric( ( 2*X$X1 - 1 + X$X2*Trt + rnorm(N) ) > 0 )
 # Defining models
-models=list(
-  list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, TrainOpts=NULL, TuneOpts=NULL),
-  list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, TrainOpts=NULL, TuneOpts=NULL),
-  list(Name="ALL", TrainFunc=function(a,b,c,d){NULL}, PredictFunc=function(m,X){rep(1,nrow(X))},TrainOpts=NULL, TuneOpts=NULL)
+
+#models=list(
+list(Name="Weisberg GML", TrainFunc=trainWeisbergGLM, PredictFunc=predictWeisbergGLM, TuneFunc = tuneWeisbergGLM,
+TuneOpts=NULL, TrainOpts=list(alpha = 0, lambda = 0.15), PredictOpts=list(fraction=0.7))
+#list(Name="Weisberg SVM", TrainFunc="trainWeisbergSVM", PredictFunc="predictSVM", TrainOpts=NULL),
+#list(Name="Weisberg RF", TrainFunc=trainWeisbergRF, PredictFunc=predictWeisbergRF, TuneFunc=tuneWeisbergRF, TuneOpts=NULL, TrainOpts=list(mtry = 2, ntree = 5, nodesize = 200))
+#list(Name="Weisberg XGb", TrainFunc=trainWeisbergXGb, PredictFunc=predictXSb, TuneFunc=trainWXG_tune, TuneOpts=list(nrounds = c(10, 15, 20), eta = c(0.3, 0.35), subsample = c(0.5, 0.6, 0.8), depth = c(2, 4, 5)), TrainOpts=NULL)
+#list(Name="2 GML", TrainFunc=train2MGML, PredictFunc=predict2MGML, TuneFunc = trainWlogit_tune, TuneOpts=list(alpha = c(0, 0.1, 0.5), lambda = c(0.05, 0.15, 0.2)), TrainOpts=NULL)
+#list(Name="2 SVM", TrainFunc=train2MSVM, PredictFunc=predict2MSVM, TrainOpts=NULL),
+#list(Name="2 RF", TrainFunc=train2MRF, PredictFunc=predict2MRF, TrainOpts=list(ntree = 75)),
+#list(Name="2 XGb", TrainFunc=train2MXGb, PredictFunc=predict2MXGb, TrainOpts=list(nrounds = 250)),
+#list(Name="RF UPLIFT", TrainFunc=trainUpliftModelRF, PredictFunc=predictUpliftModelRF, TrainOpts=NULL)
 )
+
+
+#models=list(
+  #list(Name="RandomForest", TrainFunc=trainModelRandomForest, PredictFunc=predictByModelRandomForest, TrainOpts=NULL, TuneOpts=NULL),
+  #list(Name="LMbyTian", TrainFunc=trainModelModLM, PredictFunc=predictByModelModLM, TrainOpts=NULL, TuneOpts=NULL),
+  #list(Name="ALL", TrainFunc=function(a,b,c,d){NULL}, PredictFunc=function(m,X){rep(1,nrow(X))},TrainOpts=NULL, TuneOpts=NULL)
+#)
 # Evaluating algos
 res = crossValidateAlgos_par(
     models, # The description of the evaluated models
@@ -70,7 +85,7 @@ res = crossValidateAlgos_par(
     seq(0, by = 0.2, to = 1), # Groups of 20\%
     Y, Trt, X,
     numTrials = 17,
-    randomSplit, list(TestProportion = 0.5),
+    randomSplit_equal, list(TestProportion = 0.5),
     numCores = 20
     )
 aggregate(cbind(V1, V2) ~ Model, res$Qualities, FUN=mean)
