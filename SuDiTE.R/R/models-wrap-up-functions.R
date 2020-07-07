@@ -127,3 +127,13 @@ predictByModelModLM=function(m, X) {
   X=toNumericTable(X)
   return(predict(m,X))
 }
+
+#' Outcome transformation as defined by Weisberg
+#'
+#' @param Trt the binary treatment varibale
+#' @param Y the binary response varibale
+#'
+#' @return the modified outcome vector
+modifyDataByWeisberg = function(Y, Trt) {
+  return(Trt*Y + (1 - Trt)*(1 - Y))
+}

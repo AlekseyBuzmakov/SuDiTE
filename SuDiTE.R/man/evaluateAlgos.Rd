@@ -4,8 +4,17 @@
 \alias{evaluateAlgos}
 \title{Evaluates several algos by the given train-holdout split}
 \usage{
-evaluateAlgos(models, subgroupQualityFuncs, quantile.probs, trainY, trainTrt,
-  trainX, holdoutY, holdoutTrt, holdoutX)
+evaluateAlgos(
+  models,
+  subgroupQualityFuncs,
+  quantile.probs,
+  trainY,
+  trainTrt,
+  trainX,
+  holdoutY,
+  holdoutTrt,
+  holdoutX
+)
 }
 \arguments{
 \item{models}{is a vector of model descriptios that contains Train function, Train options, Predict function and the name of the model.

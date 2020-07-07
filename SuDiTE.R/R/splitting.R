@@ -4,9 +4,9 @@
 #'
 #' @param opts$TestPropotion defines the relative size of the test set w.r.t. the whole dataset.
 #' @param opts$TestSize defines the absolute size of the test set
-#' @param dbY is Y componnet of the dataset
-#' @param dbTrt is Trt componnet of the dataset
-#' @param dbX is X componnet of the dataset
+#' @param dbY is Y component of the dataset
+#' @param dbTrt is Trt component of the dataset
+#' @param dbX is X component of the dataset
 #'
 #' @return A list with indices of train and holdout set.
 #' @export
@@ -38,9 +38,9 @@ randomSplit = function(opts, dbY, dbTrt, dbX) {
 #' @param opts$InitDataPropotion defines proportion of a dataset that is randomly assigned to train and holdout sets
 #' @param opts$InitSplitPropotion defines proportion of initial split into train and holdout sets
 #' @param opts$Deterministic is a logical flag defining if balancing assigniments should be deterministic
-#' @param dbY is Y componnet of the dataset
-#' @param dbTrt is Trt componnet of the dataset
-#' @param dbX is X componnet of the dataset
+#' @param dbY is Y component of the dataset
+#' @param dbTrt is Trt component of the dataset
+#' @param dbX is X component of the dataset
 #'
 #' @return A list with indices of train and holdout set.
 #' @export
@@ -165,4 +165,57 @@ balancedTrainProb = function(i, split, X) {
   }
   stopifnot(0 <= resProb && resProb <= 1)
   return(resProb)
+}
+
+
+
+
+
+
+
+
+#' Random balanced proportional train-holdout splitting of a dataset
+#'
+#' Takes a dataset and randomly assign observations to either train or holdout sets in a given proportion and providing equal shares of treated (Trt = 1) and control observations (Trt = 0) both in train and holdout sets
+#'
+#' @param opts$TestPropotion defines the relative size of the test set
+#' @param dbY is Y component of the dataset
+#' @param dbTrt is Trt component of the dataset
+#' @param dbX is X component of the dataset
+#'
+#' @return A list with indices of train and holdout set.
+#' @export
+#'
+#' @examples
+#' # Generating dataset
+#' Trt = rbinom(1000,1,0.5)
+#' X = data.frame(X1=rbinom(1000,1,0.6), X2=rnorm(1000), X3=rnorm(1000))
+#' Y = ( 2*X$X1 - 1 + X$X2*Trt + rnorm(1000) ) > 0
+#' # Computing the train-holdout split
+#' split = randomSplit_equal(list(TestProportion=0.2), Y, Trt, X)
+randomSplit_equal = function(opts, dbY, dbTrt, dbX) {
+  stopifnot(!is.na(opts$TestProportion))
+  stopifnot(0 < opts$TestProportion && opts$TestProportion < 1)
+
+  p1=sum(dbTrt)
+  p0=NROW(dbTrt)-p1
+  num=min(p1,p0)
+
+  Treatment = which(dbTrt == 1)
+  Non_Treatment = which(dbTrt == 0)
+
+
+  Treat = sample(Treatment, round((1-opts$TestProportion)*num, 0))
+  Non_Treat = sample(Non_Treatment, round((1-opts$TestProportion)*num, 0))
+  indsTrain = c(Treat, Non_Treat)
+
+
+  Treat_Hol = Treatment[-Treat]
+  Non_Treat_Hol = Non_Treatment[-Non_Treat]
+  #num1 = min(length(Treat_Hol), length(Non_Treat_Hol))
+
+  indsHoldout = c(Treat_Hol, Non_Treat_Hol)
+
+  #indsHoldout = sample((1:NROW(dbY))[-indsTrain], 0.4*NROW(indsTrain))
+  return(list(Train=indsTrain,Holdout=indsHoldout))
 }

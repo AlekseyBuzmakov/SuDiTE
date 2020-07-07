@@ -3,7 +3,6 @@
 \docType{package}
 \name{SuDiTE}
 \alias{SuDiTE}
-\alias{SuDiTE-package}
 \title{SuDiTE: A package for comaparison of different uplift models}
 \description{
 It includes comparison infrastructure as well as wrap-ups for many existing algos
